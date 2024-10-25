@@ -1,4 +1,5 @@
 import re
+import pandas as pd
 from pathlib import Path
 from bs4 import BeautifulSoup
 
@@ -126,24 +127,20 @@ def process_file(input_file, output_file=None) -> dict:
         # Add content sections
         for section_name, section_text in sections.items():
             if section_text:  # Only include non-empty sections
-                output_text.append(f"\n=== {section_name} ===\n")
-                output_text.append(section_text)
+                section_dict = {'section_name': section_name,
+                                'section_text': section_text}
+                output_text.append(section_dict)
 
-        # Determine output location
-        if output_file is None:
-            input_path = Path(input_file)
-            output_file = input_path.with_stem(
-                input_path.stem + '_cleaned').with_suffix('.txt')
+        # print(f"Processed file saved to: {output_file}")
 
-        # Write output
-        with open(output_file, 'w', encoding='utf-8') as f:
-            f.write('\n'.join(output_text))
+        output_text_df = pd.DataFrame(output_text)
 
-        print(f"Processed file saved to: {output_file}")
+        return output_text_df
 
     except Exception as e:
         print(f"Error processing file: {str(e)}")
 
 
 if __name__ == "__main__":
-    process_file("/Users/felixwallis/Desktop/Oxford MSc/Oxford Social Data Science Course/Fundamentals for Social Data Science in Python/sds-week-2-wikipedia-presentation/data/Xi_Jinping/2023/01/1130931521.xml")
+    df = process_file("/Users/felixwallis/Desktop/Oxford MSc/Oxford Social Data Science Course/Fundamentals for Social Data Science in Python/sds-week-2-wikipedia-presentation/data/Xi_Jinping/2023/01/1130931521.xml")
+    df.to_csv("/Users/felixwallis/Desktop/Oxford MSc/Oxford Social Data Science Course/Fundamentals for Social Data Science in Python/sds-week-2-wikipedia-presentation/data/Xi_Jinping/2023/01/1130931521.csv")
