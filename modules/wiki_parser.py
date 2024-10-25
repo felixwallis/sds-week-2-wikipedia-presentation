@@ -47,27 +47,29 @@ class WikiTextExtractor:
 
     def extract_sections(self, text) -> dict:
         """Extract sections from wiki text."""
-        # Split text into sections based on headers
-        sections = {}
-        current_section = "Introduction"
-        current_text = []
+        # Section header regex pattern
+        section_pattern = r'==+\s*(.+?)\s*==+'
 
-        for line in text.split('\n'):
-            # Check for section headers
-            header_match = re.match(r'==+\s*(.+?)\s*==+', line)
+        # Find all headers and their positions
+        header_matches = []
+        matches = re.finditer(section_pattern, text, flags=re.MULTILINE)
+        for match in matches:
+            header_content = match.group(1).strip()
+            start_pos = match.start()
+            end_pos = match.end()
+            header_matches.append((header_content, start_pos, end_pos))
 
-            if header_match:
-                # Save previous section
-                sections[current_section] = '\n'.join(current_text)
-
-                # Start new section
-                current_section = header_match.group(1)
-                current_text = []
+        # Extract content between headers
+        sections = []
+        for i, (header, start_pos, end_pos) in enumerate(header_matches):
+            # Check if this is the last header
+            if i < len(header_matches) - 1:
+                # Get the text between the current header and the next header
+                next_start_pos = header_matches[i + 1][1]
+                section_text = text[end_pos:next_start_pos].strip()
             else:
-                current_text.append(line)
-
-        # Save the last section
-        sections[current_section] = '\n'.join(current_text)
+                section_text = text[end_pos:].strip()
+            sections.append((header, section_text))
 
         return sections
 
@@ -125,14 +127,13 @@ def process_file(input_file, output_file=None) -> dict:
         output_text = []
 
         # Add content sections
-        for section_name, section_text in sections.items():
+        for section_name, section_text in sections:
             if section_text:  # Only include non-empty sections
                 section_dict = {'section_name': section_name,
                                 'section_text': section_text}
                 output_text.append(section_dict)
 
-        # print(f"Processed file saved to: {output_file}")
-
+        # Create a section-text DataFrame
         output_text_df = pd.DataFrame(output_text)
 
         return output_text_df
