@@ -34,4 +34,4 @@ if __name__ == '__main__':
     file_paths = fetch_file_paths(article_dir)
     file_data = file_paths_to_df(file_paths)  
 
-    print(file_data)
+    # print(file_data)

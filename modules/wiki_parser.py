@@ -128,6 +128,7 @@ def process_file(input_file) -> pd.DataFrame:
 
         # Broadcase metadata to all sections
         file_df = pd.DataFrame(sections).assign(**metadata)
+        file_df['file_path'] = input_file
         file_df.set_index('timestamp', inplace=True)
         
         return file_df
