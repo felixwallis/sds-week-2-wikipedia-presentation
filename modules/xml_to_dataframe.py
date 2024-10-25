@@ -1,20 +1,30 @@
-import pandas as pd
 from pathlib import Path
-from bs4 import BeautifulSoup
+
+def fetch_file_paths(article_dir: Path) -> list:
+    """Fetch file paths recursively from a directory."""
+    file_paths = []
+    try:
+        for item_path in article_dir.iterdir():
+            if item_path.is_dir():
+                # Recursively get files from subdirectories and extend the list
+                file_paths.extend(fetch_file_paths(item_path))
+            else:
+                file_paths.append(item_path)
+                
+    except Exception as e:
+        print(f"Error accessing {article_dir}: {e}")
+
+    return file_paths
 
 
-def extract_text_from_article(xml_file: Path) -> pd.DataFrame:
-    """Extract the text from an XML file and return it in a DataFrame."""
-    article_name = xml_file.stem
-
-    xml_content = xml_file.read_text()
-    soup = BeautifulSoup(xml_content, "xml")
-
-    text_elem = soup.find_all("text")
-
-    return pd.DataFrame({"article_name": article_name, "text": text_elem})
-
-
-if __name__ == "__main__":
-    xml_file = Path().cwd() / "data" / "Xi_Jinping" / \
-        "2023" / "01" / "1130931521.xml"
+if __name__ == '__main__':
+    article_dir = Path.cwd() / 'data'
+    
+    # Check if directory exists
+    if not article_dir.exists():
+        print(f"Directory not found: {article_dir}")
+    else:
+        file_paths = fetch_file_paths(article_dir)
+        print("Found files:")
+        for path in file_paths:
+            print(f"  {path}")

@@ -20,7 +20,7 @@ class WikiTextExtractor:
         self.language_links = r'\[\[[a-z\-]+:[^\]]+\]\]'
         self.external_links = r'\[https?:[^\]]+\]'
 
-    def clean_wiki_markup(self, text):
+    def clean_wiki_markup(self, text: str) -> str:
         """Remove wiki markup from text."""
         replacements = [
             (self.template_pattern, ''),        # Remove templates
@@ -45,7 +45,7 @@ class WikiTextExtractor:
 
         return text.strip()
 
-    def extract_sections(self, text) -> dict:
+    def extract_sections(self, text: str) -> list:
         """Extract sections from wiki text."""
         # Section header regex pattern
         section_pattern = r'==+\s*(.+?)\s*==+'
@@ -73,7 +73,7 @@ class WikiTextExtractor:
 
         return sections
 
-    def extract_text_from_xml(self, xml_content):
+    def extract_text_from_xml(self, xml_content) -> list:
         """Extract and clean text from XML."""
         try:
             # Parse XML with BeautifulSoup
@@ -89,12 +89,12 @@ class WikiTextExtractor:
 
                 return sections
 
-            return {'Error': 'No text content found in XML'}
+            raise Exception('No text content found in XML.')
 
         except Exception as e:
             return {'Error': f'An error occurred: {str(e)}'}
 
-    def extract_metadata_from_xml(self, xml_content):
+    def extract_metadata_from_xml(self, xml_content) -> dict:
         """Extract the XML's metadata."""
         try:
             soup = BeautifulSoup(xml_content, 'xml')
@@ -110,7 +110,7 @@ class WikiTextExtractor:
             return {'Error': f'An error occurred: {str(e)}'}
 
 
-def process_file(input_file, output_file=None) -> dict:
+def process_file(input_file) -> dict:
     """Process a Wikipedia XML file and save the cleaned text."""
     try:
         # Read input file
