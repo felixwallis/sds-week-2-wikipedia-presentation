@@ -77,7 +77,7 @@ class WikiTextExtractor:
         """Extract and clean text from XML."""
         try:
             # Parse XML with BeautifulSoup
-            soup = BeautifulSoup(xml_content, 'xml')
+            soup = BeautifulSoup(xml_content, 'lxml')
 
             # Find the text element (using find() as there is only one text element per article)
             text_elem = soup.find('text')
@@ -97,7 +97,7 @@ class WikiTextExtractor:
     def extract_metadata_from_xml(self, xml_content) -> dict:
         """Extract the XML's metadata."""
         try:
-            soup = BeautifulSoup(xml_content, 'xml')
+            soup = BeautifulSoup(xml_content, 'lxml')
             metadata = {
                 'id': soup.find('id').string if soup.find('id') else None,
                 'timestamp': soup.find('timestamp').string if soup.find('timestamp') else None,
@@ -110,7 +110,7 @@ class WikiTextExtractor:
             return {'Error': f'An error occurred: {str(e)}'}
 
 
-def process_file(input_file) -> dict:
+def process_file(input_file) -> pd.DataFrame:
     """Process a Wikipedia XML file and save the cleaned text."""
     try:
         # Read input file
@@ -125,7 +125,7 @@ def process_file(input_file) -> dict:
                 for name, text in extractor.extract_text_from_xml(xml_content)
                 if text  # Filter out empty sections]
             ]
-        
+
         # Broadcase metadata to all sections
         file_df = pd.DataFrame(sections).assign(**metadata)
         file_df.set_index('timestamp', inplace=True)
@@ -133,9 +133,9 @@ def process_file(input_file) -> dict:
         return file_df
 
     except Exception as e:
-        print(f'Error processing file: {str(e)}')
+        print(f'Error processing {input_file}: {str(e)}')
 
 
 if __name__ == "__main__":
-    df = process_file('/Users/felixwallis/Desktop/Oxford MSc/Oxford Social Data Science Course/Fundamentals for Social Data Science in Python/sds-week-2-wikipedia-presentation/data/Xi_Jinping/2023/01/1130931521.xml')
-    df.to_csv('/Users/felixwallis/Desktop/Oxford MSc/Oxford Social Data Science Course/Fundamentals for Social Data Science in Python/sds-week-2-wikipedia-presentation/data/Xi_Jinping/2023/01/1130931521.csv')
+    df = process_file('/Users/felixwallis/Desktop/Oxford MSc/Oxford Social Data Science Course/Fundamentals for Social Data Science in Python/sds-week-2-wikipedia-presentation/data/Vladimir_Putin/2022/11/1121654865.xml')
+    df.to_csv('/Users/felixwallis/Desktop/Oxford MSc/Oxford Social Data Science Course/Fundamentals for Social Data Science in Python/sds-week-2-wikipedia-presentation/data/1121654865.csv')

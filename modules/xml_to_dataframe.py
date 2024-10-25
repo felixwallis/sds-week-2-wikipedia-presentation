@@ -1,4 +1,7 @@
+import pandas as pd
 from pathlib import Path
+from tqdm import tqdm
+from wiki_parser import process_file
 
 def fetch_file_paths(article_dir: Path) -> list:
     """Fetch file paths recursively from a directory."""
@@ -17,14 +20,18 @@ def fetch_file_paths(article_dir: Path) -> list:
     return file_paths
 
 
+def file_paths_to_df(file_paths: list):
+    """Convert a list of file paths to a DataFrame."""    
+    file_data = [process_file(file) for file in tqdm(file_paths)]
+    df = pd.concat(file_data)
+
+    return df
+
+
 if __name__ == '__main__':
     article_dir = Path.cwd() / 'data'
     
-    # Check if directory exists
-    if not article_dir.exists():
-        print(f"Directory not found: {article_dir}")
-    else:
-        file_paths = fetch_file_paths(article_dir)
-        print("Found files:")
-        for path in file_paths:
-            print(f"  {path}")
+    file_paths = fetch_file_paths(article_dir)
+    file_data = file_paths_to_df(file_paths)  
+
+    print(file_data)
