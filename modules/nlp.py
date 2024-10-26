@@ -1,16 +1,10 @@
 import re
-import ssl
 import nltk
 import pandas as pd
 import numpy as np
+from tqdm import tqdm
 from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import TfidfVectorizer
-
-# Ignore SSL certificate errors
-ssl._create_default_https_context = ssl._create_unverified_context
-
-nltk.download('punkt')
-nltk.download('stopwords')
 
 class NLP:
     def __init__(self):
@@ -31,28 +25,57 @@ class NLP:
 
         return filtered_tokens 
 
-    def generate_tfidf_matrix(self, tokens_column: pd.Series) -> np.array:
-        """Generate weighted TF-IDF embeddings for a given corpus.""" 
+    def generate_tfidf_weighted_embeddings(self, tokens_column: pd.Series, word_vectors: dict) -> pd.Series:
+        """Generate embeddings weighted by TF-IDF scores for each document in the corpus."""
         if not isinstance(tokens_column, pd.Series):
             raise ValueError('Input must be a pandas Series.')
         
-        # Convert lists of tokens to strings
+        # Convert lists of tokens to strings for TF-IDF calculation
         token_strings = tokens_column.apply(lambda x: ' '.join(x))
-
+        
         # Generate TF-IDF matrix
         tfidf_vectorizer = TfidfVectorizer()
         tfidf_matrix = tfidf_vectorizer.fit_transform(token_strings.values)
-        feature_names = tfidf_vectorizer.get_feature_names_out()
-
-        print(feature_names)
-
-    def generate_weighted_embeddings(self, tokens: list, word_vectors: dict) -> np.array:
-        assert isinstance(tokens, list), 'Input must be a list.'
-
-        embeddings = [word_vectors[token] for token in tokens if token in word_vectors]
         
-        # Calculate the average of the token's embeddings
-        return np.mean(embeddings, axis=0)
+        # Get feature names (vocabulary)
+        feature_names = tfidf_vectorizer.get_feature_names_out()
+        
+        # Get embedding dimension from word vectors
+        embedding_dim = word_vectors.vector_size
+        
+        # Initialize array to store document embeddings
+        num_docs = len(tokens_column)
+        weighted_embeddings = np.zeros((num_docs, embedding_dim))
+        
+        # For each document
+        for doc_idx in tqdm(range(num_docs), desc="Generating weighted embeddings"):
+            doc_vector = np.zeros(embedding_dim)
+            total_weight = 0
+            
+            # Get the document's TF-IDF scores
+            doc_tfidf = tfidf_matrix[doc_idx].toarray().flatten()
+            
+            # For each word in the vocabulary
+            for word_idx, word in enumerate(feature_names):
+                if word in word_vectors.key_to_index and doc_tfidf[word_idx] > 0:
+                    # Multiply word embedding by its TF-IDF score
+                    doc_vector += word_vectors[word] * doc_tfidf[word_idx]
+                    total_weight += doc_tfidf[word_idx]
+            
+            # Normalize by total weight to get weighted average
+            if total_weight > 0:
+                doc_vector /= total_weight
+                
+            weighted_embeddings[doc_idx] = doc_vector
+
+        # Convert numpy arrays to lists and create a Series with the same index as input
+        embedding_series = pd.Series(
+            [emb.tolist() for emb in weighted_embeddings],
+            index=tokens_column.index,
+            name='weighted_embeddings'
+        )
+        
+        return embedding_series
 
     
     
