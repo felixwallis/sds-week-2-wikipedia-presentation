@@ -20,7 +20,7 @@ class WikiTextExtractor:
         self.language_links = r'\[\[[a-z\-]+:[^\]]+\]\]'
         self.external_links = r'\[https?:[^\]]+\]'
 
-    def clean_wiki_markup(self, text: str) -> str:
+    def _clean_wiki_markup(self, text: str) -> str:
         """Remove wiki markup from text."""
         replacements = [
             (self.template_pattern, ''),        # Remove templates
@@ -45,7 +45,7 @@ class WikiTextExtractor:
 
         return text.strip()
 
-    def extract_sections(self, text: str) -> list:
+    def _extract_sections(self, text: str) -> list:
         """Extract sections from wiki text."""
         # Section header regex pattern
         section_pattern = r'==+\s*(.+?)\s*==+'
@@ -73,7 +73,7 @@ class WikiTextExtractor:
 
         return sections
 
-    def extract_text_from_xml(self, xml_content) -> list:
+    def _extract_text_from_xml(self, xml_content) -> list:
         """Extract and clean text from XML."""
         try:
             # Parse XML with BeautifulSoup
@@ -83,9 +83,9 @@ class WikiTextExtractor:
             text_elem = soup.find('text')
             if text_elem and text_elem.string:
                 # Clean the wiki markup
-                clean_text = self.clean_wiki_markup(text_elem.string)
+                clean_text = self._clean_wiki_markup(text_elem.string)
                 # Extract sections
-                sections = self.extract_sections(clean_text)
+                sections = self._extract_sections(clean_text)
 
                 return sections
 
@@ -94,7 +94,7 @@ class WikiTextExtractor:
         except Exception as e:
             return {'Error': f'An error occurred: {str(e)}'}
 
-    def extract_metadata_from_xml(self, xml_content) -> dict:
+    def _extract_metadata_from_xml(self, xml_content) -> dict:
         """Extract the XML's metadata."""
         try:
             soup = BeautifulSoup(xml_content, 'lxml')
@@ -108,35 +108,50 @@ class WikiTextExtractor:
         
         except Exception as e:
             return {'Error': f'An error occurred: {str(e)}'}
-
-
-def process_file(input_file) -> pd.DataFrame:
-    """Process a Wikipedia XML file and save the cleaned text."""
-    try:
-        # Read input file
-        with open(input_file, 'r', encoding='utf-8') as f:
-            xml_content = f.read()
-
-            # Extract and clean text
-            extractor = WikiTextExtractor()
-            metadata = extractor.extract_metadata_from_xml(xml_content)
-            sections = [
-                {'section_name': name, 'section_text': text}
-                for name, text in extractor.extract_text_from_xml(xml_content)
-                if text  # Filter out empty sections]
-            ]
-
-        # Broadcase metadata to all sections
-        file_df = pd.DataFrame(sections).assign(**metadata)
-        file_df['file_path'] = input_file
-        file_df.set_index('timestamp', inplace=True)
         
-        return file_df
 
-    except Exception as e:
-        print(f'Error processing {input_file}: {str(e)}')
+    def process_file(self, input_file) -> pd.DataFrame:
+        """Process a Wikipedia XML file and save the cleaned text."""
+        try:
+            # Read input file
+            with open(input_file, 'r', encoding='utf-8') as f:
+                xml_content = f.read()
+
+                # Extract and clean text
+                metadata = self._extract_metadata_from_xml(xml_content)
+                sections = [
+                    {'section_name': name, 'section_text': text}
+                    for name, text in self._extract_text_from_xml(xml_content)
+                    if text  # Filter out empty sections]
+                ]
+
+            # Broadcase metadata to all sections
+            file_df = pd.DataFrame(sections).assign(**metadata)
+            file_df['file_path'] = input_file
+            file_df.set_index('timestamp', inplace=True)
+            
+            return file_df
+
+        except Exception as e:
+            print(f'Error processing {input_file}: {str(e)}')
 
 
-if __name__ == "__main__":
-    df = process_file('/Users/felixwallis/Desktop/Oxford MSc/Oxford Social Data Science Course/Fundamentals for Social Data Science in Python/sds-week-2-wikipedia-presentation/data/Vladimir_Putin/2022/11/1121654865.xml')
-    df.to_csv('/Users/felixwallis/Desktop/Oxford MSc/Oxford Social Data Science Course/Fundamentals for Social Data Science in Python/sds-week-2-wikipedia-presentation/data/1121654865.csv')
+class FileProcessor:
+    def __init__(self):
+        pass
+
+    def fetch_file_paths(self, article_dir: Path) -> list:
+        """Fetch file paths recursively from a directory."""
+        file_paths = []
+        try:
+            for item_path in article_dir.iterdir():
+                if item_path.is_dir():
+                    # Recursively get files from subdirectories and extend the list
+                    file_paths.extend(self.fetch_file_paths(item_path))
+                else:
+                    file_paths.append(item_path)
+                    
+        except Exception as e:
+            print(f"Error accessing files: {e}")
+
+        return file_paths
