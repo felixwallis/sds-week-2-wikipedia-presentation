@@ -5,6 +5,7 @@ import numpy as np
 from tqdm import tqdm
 from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
 
 class NLP:
@@ -78,6 +79,36 @@ class NLP:
         )
 
         return embedding_series
+
+    def calculate_grouped_similarities(self, group: pd.DataFrame, figure_column: str, figure_1: str,
+                                       figure_2: str, embeddings_column: str,
+                                       category_column: str = None, category: str = None) -> float:
+        """
+        Calculate the average cosine similarity between two groups of embeddings.
+        """
+        # Filter for each figure
+        figure_1_data = group[group[figure_column] == figure_1]
+        figure_2_data = group[group[figure_column] == figure_2]
+
+        if category_column and category:
+            # Filter for each section
+            figure_1_data = figure_1_data[figure_1_data[category_column] == category]
+            figure_2_data = figure_2_data[figure_2_data[category_column] == category]
+
+        # Skip if either figure is missing in this month
+        if figure_1_data.empty or figure_2_data.empty:
+            return np.nan
+
+        # Use stack_embeddings to create matrices
+        figure_1_embeddings = np.vstack(figure_1_data[embeddings_column])
+        figure_2_embeddings = np.vstack(figure_2_data[embeddings_column])
+
+        # Calculate similarity
+        similarity_matrix = cosine_similarity(
+            figure_1_embeddings, figure_2_embeddings)
+        average_similarity = np.mean(similarity_matrix)
+
+        return average_similarity
 
 
 if __name__ == '__main__':
