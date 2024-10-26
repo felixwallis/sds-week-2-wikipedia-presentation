@@ -50,6 +50,9 @@ class NLP:
         assert isinstance(tokens, list), 'Input must be a list.'
 
         embeddings = [word_vectors[token] for token in tokens if token in word_vectors]
+        
+        # Calculate the average of the token's embeddings
+        return np.mean(embeddings, axis=0)
 
     
     
