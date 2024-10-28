@@ -184,3 +184,21 @@ This project includes several analytical methods to explore Wikipedia’s repres
 Through a multi-dimensional approach, this project presents an objective comparison of Wikipedia articles on Xi Jinping and Vladimir Putin. From semantic similarity and bias detection to political lean and emotional analysis, this analysis sheds light on editorial nuances that shape public perception.
 
 For more details, see our [full presentation](https://docs.google.com/presentation/d/1wSAak6iymiAiT6gbfA9WztMHbwIN8lsB3Q6jBDtRzlA/edit?usp=sharing).
+
+---
+> ## Contributors (A-Z)
+
+- **Avnee Jain**  
+  - GitHub: [AvneeJ](https://github.com/AvneeJ)  
+  - LinkedIn: [avneejain](https://www.linkedin.com/in/avneejain/)
+
+- **BC**  
+  - GitHub: [cbccbcc](https://github.com/cbccbcc)
+
+- **Felix Wallis**  
+  - GitHub: [felixwallis](https://github.com/felixwallis)  
+  - LinkedIn: [felixwallis2001](https://www.linkedin.com/in/felixwallis2001/)
+
+- **Shreyansh Padarha**  
+  - GitHub: [shreyansh-2003](https://github.com/shreyansh-2003)  
+  - LinkedIn: [shreyansh-padarha](https://www.linkedin.com/in/shreyansh-padarha/)
